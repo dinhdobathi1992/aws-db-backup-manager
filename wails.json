@@ -1,0 +1,20 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "AWS DB Backup Manager",
+  "outputfilename": "AWS DB Backup Manager",
+  "frontend:install": "pnpm install",
+  "frontend:build": "pnpm run build",
+  "frontend:dev:watcher": "pnpm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "Thi",
+    "email": "dinhdobathi@gmail.com"
+  },
+  "info": {
+    "companyName": "dinhdobathi",
+    "productName": "AWS DB Backup Manager",
+    "productVersion": "0.1.0",
+    "copyright": "© 2026 dinhdobathi",
+    "comments": "Local RDS/Aurora backup and restore manager. No delete, ever."
+  }
+}

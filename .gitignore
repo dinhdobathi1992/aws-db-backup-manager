@@ -1,0 +1,26 @@
+reference-original/
+
+# Go
+/aws-db-backup-manager
+
+# Node / frontend build output
+frontend/node_modules/
+frontend/dist/*
+!frontend/dist/gitkeep
+
+# Wails build output
+build/bin/
+build/darwin/*.app
+
+# macOS
+.DS_Store
+
+# Release artifacts (make package)
+dist/
+
+# Native v0.2 build outputs
+macos/.build/
+macos/build/
+
+# Internal plans and QA reports (contain real account details)
+plans/

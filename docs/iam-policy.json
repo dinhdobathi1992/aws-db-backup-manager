@@ -1,0 +1,136 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AppGuardAllowlistReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "backup:DescribeBackupJob",
+        "backup:DescribeBackupVault",
+        "backup:DescribeRecoveryPoint",
+        "backup:DescribeRestoreJob",
+        "backup:GetBackupPlan",
+        "backup:GetBackupSelection",
+        "backup:GetBackupVaultAccessPolicy",
+        "backup:GetBackupVaultNotifications",
+        "backup:GetRecoveryPointRestoreMetadata",
+        "backup:ListBackupJobs",
+        "backup:ListBackupPlans",
+        "backup:ListBackupSelections",
+        "backup:ListBackupVaults",
+        "backup:ListRecoveryPointsByResource",
+        "backup:ListRestoreJobs",
+        "backup:ListTags",
+        "rds:DescribeAccountAttributes",
+        "rds:DescribeDBClusterParameterGroups",
+        "rds:DescribeDBClusterSnapshotAttributes",
+        "rds:DescribeDBClusterSnapshots",
+        "rds:DescribeDBClusters",
+        "rds:DescribeDBEngineVersions",
+        "rds:DescribeDBInstanceAutomatedBackups",
+        "rds:DescribeDBInstances",
+        "rds:DescribeDBParameterGroups",
+        "rds:DescribeDBSnapshotAttributes",
+        "rds:DescribeDBSnapshots",
+        "rds:DescribeDBSubnetGroups",
+        "rds:DescribeEventSubscriptions",
+        "rds:DescribeEvents",
+        "rds:DescribeOrderableDBInstanceOptions",
+        "rds:DescribePendingMaintenanceActions",
+        "rds:DescribeValidDBInstanceModifications",
+        "rds:ListTagsForResource",
+        "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AppGuardAllowlistCreateRestoreModify",
+      "Effect": "Allow",
+      "Action": [
+        "backup:CreateBackupPlan",
+        "backup:CreateBackupSelection",
+        "backup:StartBackupJob",
+        "backup:StartRestoreJob",
+        "rds:AddTagsToResource",
+        "rds:CreateDBClusterSnapshot",
+        "rds:CreateDBInstance",
+        "rds:CreateDBSnapshot",
+        "rds:ModifyDBCluster",
+        "rds:ModifyDBInstance",
+        "rds:RestoreDBClusterFromSnapshot",
+        "rds:RestoreDBClusterToPointInTime",
+        "rds:RestoreDBInstanceFromDBSnapshot",
+        "rds:RestoreDBInstanceToPointInTime"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "PassAwsBackupDefaultServiceRole",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::*:role/service-role/AWSBackupDefaultServiceRole",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "backup.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "KmsGrantForEncryptedRestore",
+      "Effect": "Allow",
+      "Action": "kms:CreateGrant",
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "kms:ViaService": "rds.*.amazonaws.com"
+        },
+        "Bool": {
+          "kms:GrantIsForAWSResource": "true"
+        }
+      }
+    },
+    {
+      "Sid": "KmsDescribeKeyForEncryptedRestore",
+      "Effect": "Allow",
+      "Action": "kms:DescribeKey",
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "kms:ViaService": "rds.*.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "DenyDestructiveDefenseInDepth",
+      "Effect": "Deny",
+      "Action": [
+        "backup:Delete*",
+        "backup:Disassociate*",
+        "backup:PutBackupVaultAccessPolicy",
+        "backup:PutBackupVaultLockConfiguration",
+        "backup:StartCopyJob",
+        "backup:Stop*",
+        "backup:UpdateBackupPlan",
+        "backup:UpdateGlobalSettings",
+        "backup:UpdateRecoveryPointLifecycle",
+        "backup:UpdateRegionSettings",
+        "rds:BacktrackDBCluster",
+        "rds:Delete*",
+        "rds:Failover*",
+        "rds:ModifyDBClusterSnapshotAttribute",
+        "rds:ModifyDBSnapshot",
+        "rds:ModifyDBSnapshotAttribute",
+        "rds:PromoteReadReplica",
+        "rds:PromoteReadReplicaDBCluster",
+        "rds:Reboot*",
+        "rds:Remove*",
+        "rds:StartExportTask",
+        "rds:Stop*",
+        "rds:SwitchoverBlueGreenDeployment",
+        "rds:SwitchoverGlobalCluster",
+        "rds:SwitchoverReadReplica"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
