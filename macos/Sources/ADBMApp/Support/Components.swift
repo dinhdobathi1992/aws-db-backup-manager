@@ -149,6 +149,20 @@ struct ProdBadge: View {
     }
 }
 
+/// Writer/reader role of an instance inside a cluster.
+struct RoleBadge: View {
+    let isWriter: Bool
+    var body: some View {
+        Text(isWriter ? "Writer" : "Reader")
+            .font(.caption.weight(.semibold))
+            .frame(width: 52)
+            .padding(.vertical, 2)
+            .foregroundStyle(isWriter ? Color.white : Color.primary)
+            .background(isWriter ? Color.accentColor : Color.secondary.opacity(0.22), in: .capsule)
+            .fixedSize()
+    }
+}
+
 struct ReadOnlyBadge: View {
     var compact = false
     var body: some View {

@@ -68,6 +68,30 @@ enum Fmt {
 
     static func kind(_ k: DBKind) -> String { k == .cluster ? "Cluster" : "Instance" }
 
+    /// "Cluster · 1 writer, 2 readers" for clusters with known members.
+    static func kindDetail(_ db: Database) -> String {
+        guard db.kind == .cluster, let ms = db.members, !ms.isEmpty else { return kind(db.kind) }
+        let w = ms.filter(\.isWriter).count, r = ms.count - w
+        var parts: [String] = []
+        if w > 0 { parts.append("\(w) writer" + (w == 1 ? "" : "s")) }
+        if r > 0 { parts.append("\(r) reader" + (r == 1 ? "" : "s")) }
+        return "Cluster · " + parts.joined(separator: ", ")
+    }
+
+    /// Instance class, or for a cluster its members' classes ("2 × db.r6g.large").
+    static func dbClass(_ db: Database) -> String {
+        if !db.class.isEmpty { return db.class }
+        guard let ms = db.members, !ms.isEmpty else { return "—" }
+        let classes = Set(ms.map(\.class).filter { !$0.isEmpty })
+        if classes.count == 1, let c = classes.first { return ms.count == 1 ? c : "\(ms.count) × \(c)" }
+        return "\(ms.count) instances"
+    }
+
+    /// Aurora storage grows on its own; AWS reports a placeholder size for it.
+    static func storage(_ db: Database) -> String {
+        db.kind == .cluster && db.engine.hasPrefix("aurora") ? "Auto" : size(db.storageGb)
+    }
+
     static func regions(_ r: [String]) -> String { r.isEmpty ? "—" : r.joined(separator: ", ") }
 
     static func source(_ s: SnapshotSource) -> String {
@@ -99,6 +123,7 @@ enum Fmt {
         if q.isEmpty { return true }
         let hay = [db.identifier, db.engine, engine(db.engine), db.engineVersion, db.region, db.class, db.status]
             + (db.tags.map { Array($0.values) } ?? [])
+            + (db.members ?? []).flatMap { [$0.identifier, $0.class, $0.availabilityZone] }
         return hay.contains { $0.lowercased().contains(q) }
     }
 

@@ -45,18 +45,30 @@ final class InventoryMappingTests: XCTestCase {
         let h = Harness()
         h.stub.onXML(.describeDBClusters, """
             <DBClusters><DBCluster><DBClusterIdentifier>prod-orders-cluster</DBClusterIdentifier><DBClusterMembers>
-            <DBClusterMember><DBInstanceIdentifier>prod-orders-cluster-writer</DBInstanceIdentifier></DBClusterMember>
-            <DBClusterMember><DBInstanceIdentifier>prod-orders-cluster-reader-1</DBInstanceIdentifier></DBClusterMember>
+            <DBClusterMember><DBInstanceIdentifier>prod-orders-cluster-reader-1</DBInstanceIdentifier><IsClusterWriter>false</IsClusterWriter></DBClusterMember>
+            <DBClusterMember><DBInstanceIdentifier>prod-orders-cluster-writer</DBInstanceIdentifier><IsClusterWriter>true</IsClusterWriter></DBClusterMember>
             </DBClusterMembers></DBCluster></DBClusters>
             """)
         h.stub.onXML(.describeDBInstances, """
-            <DBInstances><DBInstance><DBInstanceIdentifier>prod-orders-cluster-writer</DBInstanceIdentifier></DBInstance>
-            <DBInstance><DBInstanceIdentifier>prod-orders-cluster-reader-1</DBInstanceIdentifier></DBInstance>
+            <DBInstances><DBInstance><DBInstanceIdentifier>prod-orders-cluster-writer</DBInstanceIdentifier>
+            <DBInstanceClass>db.r6g.large</DBInstanceClass><DBInstanceStatus>available</DBInstanceStatus>
+            <AvailabilityZone>us-east-1a</AvailabilityZone><EngineVersion>15.4</EngineVersion></DBInstance>
+            <DBInstance><DBInstanceIdentifier>prod-orders-cluster-reader-1</DBInstanceIdentifier>
+            <DBInstanceClass>db.r6g.xlarge</DBInstanceClass><DBInstanceStatus>rebooting</DBInstanceStatus>
+            <AvailabilityZone>us-east-1b</AvailabilityZone></DBInstance>
             <DBInstance><DBInstanceIdentifier>prod-standalone-pg</DBInstanceIdentifier></DBInstance></DBInstances>
             """)
         let dbs = try await h.inventory.listDatabases(testAccount)
         XCTAssertEqual(dbs.map(\.identifier), ["prod-orders-cluster", "prod-standalone-pg"])
         XCTAssertEqual(dbs.map(\.kind), [.cluster, .instance])
+        // Members stay visible under their cluster, writer first, with their own details.
+        let ms = try XCTUnwrap(dbs[0].members)
+        XCTAssertEqual(ms.map(\.identifier), ["prod-orders-cluster-writer", "prod-orders-cluster-reader-1"])
+        XCTAssertEqual(ms.map(\.isWriter), [true, false])
+        XCTAssertEqual(ms.map(\.class), ["db.r6g.large", "db.r6g.xlarge"])
+        XCTAssertEqual(ms.map(\.status), ["available", "rebooting"])
+        XCTAssertEqual(ms.map(\.availabilityZone), ["us-east-1a", "us-east-1b"])
+        XCTAssertNil(dbs[1].members)
         // Cached: a second read makes no calls.
         let n = h.stub.calls.count
         _ = try await h.inventory.listDatabases(testAccount)

@@ -46,6 +46,14 @@ public enum InventoryMapping {
                  latestRestorableTime: AWSTime.ptr(i.optStr("LatestRestorableTime")), tags: tagMap(i))
     }
 
+    /// A DBClusterMember plus, when listed, its DBInstance details.
+    public static func mapMember(_ m: XMLNode, instance i: XMLNode?) -> ClusterMember {
+        ClusterMember(identifier: m.str("DBInstanceIdentifier"), isWriter: m.bool("IsClusterWriter"),
+                      class: i?.str("DBInstanceClass") ?? "", status: i?.str("DBInstanceStatus") ?? "",
+                      availabilityZone: i?.str("AvailabilityZone") ?? "", engineVersion: i?.str("EngineVersion") ?? "",
+                      endpoint: i?["Endpoint", "Address"]?.text ?? "")
+    }
+
     /// RDS SnapshotType -> source. "awsbackup" snapshots return nil on
     /// purpose: they are reported once, as a recovery point.
     public static func snapshotSource(fromType t: String) -> SnapshotSource? {

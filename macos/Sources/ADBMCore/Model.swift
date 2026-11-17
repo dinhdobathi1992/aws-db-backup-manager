@@ -79,18 +79,40 @@ public struct Database: Codable, Sendable, Hashable, Identifiable {
     public var preferredBackupWindow: String
     public var latestRestorableTime: String?
     public var tags: [String: String]?
+    /// Aurora/Multi-AZ cluster only: the instances in the cluster, writer first.
+    public var members: [ClusterMember]?
 
     public var id: String { "\(accountId)|\(region)|\(kind.rawValue)|\(identifier)" }
 
     public init(accountId: String, region: String, kind: DBKind, identifier: String, engine: String = "",
                 engineVersion: String = "", class cls: String = "", status: String = "", endpoint: String = "",
                 multiAz: Bool = false, storageGb: Int64 = 0, encrypted: Bool = false, backupRetentionDays: Int = 0,
-                preferredBackupWindow: String = "", latestRestorableTime: String? = nil, tags: [String: String]? = nil) {
+                preferredBackupWindow: String = "", latestRestorableTime: String? = nil, tags: [String: String]? = nil,
+                members: [ClusterMember]? = nil) {
         self.accountId = accountId; self.region = region; self.kind = kind; self.identifier = identifier
         self.engine = engine; self.engineVersion = engineVersion; self.class = cls; self.status = status
         self.endpoint = endpoint; self.multiAz = multiAz; self.storageGb = storageGb; self.encrypted = encrypted
         self.backupRetentionDays = backupRetentionDays; self.preferredBackupWindow = preferredBackupWindow
-        self.latestRestorableTime = latestRestorableTime; self.tags = tags
+        self.latestRestorableTime = latestRestorableTime; self.tags = tags; self.members = members
+    }
+}
+
+/// One DB instance inside a cluster, read from DescribeDBInstances.
+public struct ClusterMember: Codable, Sendable, Hashable, Identifiable {
+    public var identifier: String
+    public var isWriter: Bool
+    public var `class`: String
+    public var status: String
+    public var availabilityZone: String
+    public var engineVersion: String
+    public var endpoint: String
+
+    public var id: String { identifier }
+
+    public init(identifier: String, isWriter: Bool, class cls: String = "", status: String = "",
+                availabilityZone: String = "", engineVersion: String = "", endpoint: String = "") {
+        self.identifier = identifier; self.isWriter = isWriter; self.class = cls; self.status = status
+        self.availabilityZone = availabilityZone; self.engineVersion = engineVersion; self.endpoint = endpoint
     }
 }
 

@@ -68,18 +68,27 @@ public final class Inventory: Sendable {
             if clusters[id] == nil { order.append(id) }
             clusters[id] = n
         }
-        var members = Set<String>()
         var out: [Database] = []
         cache.set("clusterEarliest|\(account.id)|\(region)", Self.clusterEarliest(clusterNodes))
-        for id in order {
-            let n = clusters[id]!
-            out.append(InventoryMapping.mapCluster(accountId: account.id, region: region, n))
-            for m in n.list("DBClusterMembers") { members.insert(m.str("DBInstanceIdentifier")) }
-        }
 
         let instances: [XMLNode]
         do { instances = try await c.queryAll(.describeDBInstances, list: "DBInstances") }
         catch { throw BackendError.wrap("describe db instances in \(region)", error) }
+        var byId: [String: XMLNode] = [:]
+        for i in instances { byId[i.str("DBInstanceIdentifier")] = i }
+
+        // Cluster members are shown under their cluster, not as databases of their own.
+        var members = Set<String>()
+        for id in order {
+            let n = clusters[id]!
+            var db = InventoryMapping.mapCluster(accountId: account.id, region: region, n)
+            let ms = n.list("DBClusterMembers").map { m in
+                InventoryMapping.mapMember(m, instance: byId[m.str("DBInstanceIdentifier")])
+            }
+            members.formUnion(ms.map(\.identifier))
+            db.members = ms.sorted { ($0.isWriter ? 0 : 1, $0.identifier) < ($1.isWriter ? 0 : 1, $1.identifier) }
+            out.append(db)
+        }
         for i in instances where !members.contains(i.str("DBInstanceIdentifier")) {
             out.append(InventoryMapping.mapInstance(accountId: account.id, region: region, i))
         }

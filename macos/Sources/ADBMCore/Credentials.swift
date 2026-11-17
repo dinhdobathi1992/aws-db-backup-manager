@@ -38,6 +38,7 @@ public enum AWSCLI {
             let p = Process()
             p.executableURL = URL(fileURLWithPath: bin)
             p.arguments = args
+            p.environment = CABundle.awsEnvironment()
             let out = Pipe(), err = Pipe()
             p.standardOutput = out; p.standardError = err
             p.terminationHandler = { proc in

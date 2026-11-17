@@ -192,7 +192,9 @@ struct RestoreWizard: View {
         }
         restoreTime = latestRestorable ?? Date()
         targetIdentifier = "\(db.identifier)-restored"
-        instanceClass = db.class
+        // A provisioned Aurora cluster has no class of its own; start from its writer's.
+        let writer = db.members?.first(where: \.isWriter) ?? db.members?.first
+        instanceClass = db.class.isEmpty ? (writer?.class ?? "") : db.class
     }
 
     private func submit() {
